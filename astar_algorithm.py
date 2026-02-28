@@ -17,8 +17,6 @@ To do list
 root_ui = Tk()
 root_ui.geometry("1000x1000")
 
-row_width = 10
-row_height = 10
 increment_x = 80
 increment_y = 80
 
@@ -66,6 +64,8 @@ class Tile:
         self.UpdateStatus()
 
     def UpdateStatus(self):
+        # Colors tile according to the tile type
+
         if (self.enabled):
             self.color = "green"
         else:
@@ -127,25 +127,31 @@ class MainFrame:
         safe_tiles = []
         t_path = []
 
+        # Make only x amount of moves
         for move in range(10):
+
+            # Get the surrounding tiles
             possible_moves = SurroundingTiles((new_hog.x, new_hog.y))
 
             for t in possible_moves:
-                tile_x, tile_y = t
+
+                # Get the tile information
+                target_tile = self.FindTileByPos(t)
                 smallest_cost = math.inf
 
-                target_tile = self.FindTileByPos(t)
+                # If there is a real tile
                 if target_tile:
-                    g = new_hog.steps_taken * math.sqrt(increment_x**2 + increment_y**2)
-                    h = math.sqrt((goal_tile.x - tile_x)**2 + (goal_tile.y - tile_y)**2)
-                    tile_cost = g + h
-    
-                    if not t in t_path:
-                        if tile_cost < smallest_cost and target_tile.enabled:
-                            smallest_cost = target_tile
 
-                        heapq.heappush(safe_tiles, (tile_cost, new_hog))
-                        t_path.append(t)
+                    # Get heurestics data
+                    g = new_hog.steps_taken * math.sqrt(increment_x**2 + increment_y**2)
+                    h = math.sqrt((goal_tile.x - target_tile.x)**2 + (goal_tile.y - target_tile.y)**2)
+                    tile_cost = g + h
+
+                    if tile_cost < smallest_cost and target_tile.enabled:
+                        smallest_cost = target_tile
+
+                    heapq.heappush(safe_tiles, (tile_cost, new_hog))
+                    t_path.append(t)
                     
                     if smallest_cost not in hog_path and smallest_cost != math.inf:
                         hog_path.append((smallest_cost.x, smallest_cost.y))
@@ -153,7 +159,6 @@ class MainFrame:
 
                     new_hog.steps_taken += 1
                     
-                #print("all tiles: {}", hog_path)
                 stepped_tile = self.FindTileByPos((new_hog.x, new_hog.y))
 
 
@@ -162,6 +167,7 @@ class MainFrame:
         
                 else:
                     pass
+                
         print("Goal is located at: {} \n"
             "Start is located at: {} \n"
             "Path taken: {}".format((goal_tile.x, goal_tile.y), (start_tile.x, start_tile.y), hog_path))
@@ -169,16 +175,18 @@ class MainFrame:
         self.main_frame.place(x=0, y=0)
     
     def FindTileByPos(self, target_pos):
+        # Go through each tile, check if its our target tile, return.
+
         for tile in self.tiles:
             if (tile.x == target_pos[0] and tile.y == target_pos[1]):
-                if tile.enabled:
-                    return tile
-                else:
-                    return None
+                return tile
+
             
         raise Exception("Couldn't find tile! {}".format(target_pos))
 
 def RandomTile(tiles: list):
+    # Choose a random tile, if it isn't special, return it. If it, re-run the function until its normal.
+
     tile = tiles[random.randint(0, len(tiles))]
 
     if not tile.start and not tile.goal:
